@@ -34,6 +34,13 @@ WHERE review_count::numeric > '10000'
 AND rating > '4'
 ORDER BY review_count::numeric DESC, rating DESC;
 
+--tried to find ratings with the top ratings but its not very informative
+SELECT content_rating, AVG(rating)
+FROM play_store_apps
+WHERE review_count::numeric > '10000'
+GROUP BY content_rating
+ORDER BY AVG(rating);
+
 --ratings for app_store_apps and play_store_apps inner joined where there are more than 1000 reviews
 SELECT *
 FROM app_store_apps
