@@ -6,71 +6,93 @@ FROM play_store_apps
 INNER JOIN app_store_apps USING (name);
 
 
---a) profits by genre (me), profits by size etc, sort avg rating by app
+--a) profits by genre, profits by size etc, sort avg rating by app
 
---b) determine fall/halloween apps, family vs horror, 
+--b) determine fall/halloween apps, family vs horror
+
+--I'm focusing on genres
 
 SELECT DISTINCT primary_genre
 FROM app_store_apps;
+--23 distinct genres in the app store
 
 
 SELECT DISTINCT genres
 FROM play_store_apps;
+--119 genres in the play store.
+--The app store's genres are more condensed than the play store.
+
+
+/* Gameplan for genres:
+-highest avg rated genre
+-review_counts for genre
+-avg genre price and avg profits
+*/
+
+
 
 --highest avg rated genre
---review_counts for genre
---avg genre price and avg profits
---Install count for genre
---Look within the genres to see the top apps
 
-
-
-
---highest avg rated genre
-
-SELECT ROUND(AVG(rating),2)as avg_rating,primary_genre
+SELECT primary_genre,ROUND(AVG(rating),2)as avg_rating
 FROM app_store_apps
 WHERE rating>=4
 GROUP BY primary_genre
 ORDER BY avg_rating DESC
 LIMIT 10;
 
---In the app store, top 5 avg ratings of primary genres is:
---Medical, Book, Health/Fitness, Reference, Photo/Video
+/* App store, top 5 avg ratings of primary genres:
 
-SELECT ROUND(AVG(rating),2) as avg_rating, genres
+Medical				4.54
+Book				4.53
+Health & Fitness	4.50
+Reference			4.44
+Photo & Video		4.42
+*/
+
+
+--Play Store avg ratings by genre
+
+SELECT genres,ROUND(AVG(rating),2) as avg_rating
 FROM play_store_apps
 Where rating >=4
 GROUP BY genres
 ORDER BY avg_rating DESC
 LIMIT 10;
 
---In the play store, top 5 avg ratings of genres is:
---Comics,Board,Books/Reference,Health/Fitness,Art/Design
+/*In the play store, top 5 avg ratings of genres:
 
---The common genres between the app and play store with the highest avg ratings is:
---Books/Reference, Health/Fitness
+Comics;Creativity				4.80
+Board;Pretend Play				4.80
+Books & Reference;Education		4.70
+Health & Fitness;Education		4.70
+Art & Design;Creativity			4.62
 
---Common genres in top 10 also include games (board)
+The common genres between the app and play store with the highest avg ratings is:
+Books/Reference, Health/Fitness
 
+Common genres in top 10 also include games
+*/
 
 
 --Most review counts per genre:
 
-SELECT SUM(review_count::numeric) AS total_count,primary_genre
+SELECT primary_genre,SUM(review_count::numeric) AS total_count
 FROM app_store_apps
 GROUP BY primary_genre
 ORDER BY total_count DESC;
 
 --Games are by far most reviewed with 52,878,491 reviews
---Social Networking(7,598,316), Photo/Video, Entertaiment, and Music(3,980,199)
+--Social Networking(7,598,316), Photo/Video(5,008,946), Entertaiment(4,030,518), and Music(3,980,199)
 
-SELECT SUM(review_count::numeric) AS total_count,genres
+SELECT genres,SUM(review_count::numeric) AS total_count
 FROM play_store_apps
 GROUP BY genres
 ORDER BY total_count DESC;
 
---
+--Communication apps have the most reviews with 815,462,260
+--Social(621,241,422), Casual(412,078,863), Action(350,303,953), Arcade (336,990,433)
+
+
 
 --app_store_apps profit
 
@@ -94,7 +116,8 @@ apple_profit_info AS
 		 	((2500 * longevity) - ((1000 * longevity)+purchase_cost))::money AS longterm_profit
 		 FROM long_purchase_cost)
 SELECT * 
-FROM apple_profit_info;
+FROM apple_profit_info
+ORDER BY longterm_profit DESC;
 
 
 
@@ -180,7 +203,7 @@ FROM play_profit_info
 WHERE longterm_profit IS NOT NULL
 GROUP BY genres
 ORDER BY avg_profit DESC
-LIMIT 15;
+LIMIT 5;
  
 /* Top 5 genres with the highest avg_profit in the play store:
 	"Board;Pretend Play"			"$179,100.00"
@@ -248,4 +271,3 @@ WHERE 	((2500 * apple_profit_info.longevity + (2500 * play_profit_info.longevity
 		(SELECT MAX(longterm_profit) FROM apple_profit_info)
 ORDER BY combined_profit DESC
 LIMIT 10;
-
